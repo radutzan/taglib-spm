@@ -1,0 +1,11 @@
+prefix=/Volumes/Macintosh HD/Users/radutzan/Projects/repos/taglib-spm/taglib
+exec_prefix=/Volumes/Macintosh HD/Users/radutzan/Projects/repos/taglib-spm/taglib
+libdir=/Volumes/Macintosh HD/Users/radutzan/Projects/repos/taglib-spm/taglib/lib
+includedir=/Volumes/Macintosh HD/Users/radutzan/Projects/repos/taglib-spm/taglib/include
+
+Name: TagLib
+Description: Audio meta-data library
+Requires:
+Version: 1.12
+Libs: -L${libdir} -ltag -lz
+Cflags: -I${includedir} -I${includedir}/taglib
