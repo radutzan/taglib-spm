@@ -19,6 +19,7 @@ let package = Package(
       cxxSettings: [
         .headerSearchPath("../3rdparty"),
         .headerSearchPath(""),
+        .headerSearchPath("include"),
         .headerSearchPath("ape"),
         .headerSearchPath("asf"),
         .headerSearchPath("dsdiff"),
