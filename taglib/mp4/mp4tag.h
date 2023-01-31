@@ -36,11 +36,9 @@
 #include "mp4item.h"
 
 namespace TagLib {
-
   namespace MP4 {
-
     /*!
-     * \deprecated
+     * \deprecated Use ItemMap.
      */
     TAGLIB_DEPRECATED typedef TagLib::Map<String, Item> ItemListMap;
     typedef TagLib::Map<String, Item> ItemMap;
@@ -72,7 +70,7 @@ namespace TagLib {
         virtual bool isEmpty() const;
 
         /*!
-         * \deprecated Use the item() and setItem() API instead
+         * \deprecated Use the item() and setItem() API instead.
          */
         TAGLIB_DEPRECATED ItemMap &itemListMap();
 
@@ -161,9 +159,6 @@ namespace TagLib {
         class TagPrivate;
         TagPrivate *d;
     };
-
-  }
-
-}
-
+  }  // namespace MP4
+}  // namespace TagLib
 #endif

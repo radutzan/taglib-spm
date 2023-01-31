@@ -53,10 +53,17 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 endif()
 
-if(MSVC AND ENABLE_STATIC_RUNTIME)
-  foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-    string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-  endforeach(flag_var)
+if(MSVC)
+  if(ENABLE_STATIC_RUNTIME)
+    foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+      string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+    endforeach(flag_var)
+  endif()
+  # Disable warnings for internal invocations of API functions
+  # that have been marked with TAGLIB_DEPRECATED
+  # https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-3-c4996
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4996")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4996")
 endif()
 
 # Read version information from file taglib/toolkit/taglib.h into variables
@@ -85,9 +92,9 @@ endif()
 # 2. If any interfaces have been added, removed, or changed since the last update, increment current, and set revision to 0.
 # 3. If any interfaces have been added since the last public release, then increment age.
 # 4. If any interfaces have been removed since the last public release, then set age to 0.
-set(TAGLIB_SOVERSION_CURRENT  19)
+set(TAGLIB_SOVERSION_CURRENT  20)
 set(TAGLIB_SOVERSION_REVISION 0)
-set(TAGLIB_SOVERSION_AGE      18)
+set(TAGLIB_SOVERSION_AGE      19)
 
 math(EXPR TAGLIB_SOVERSION_MAJOR "${TAGLIB_SOVERSION_CURRENT} - ${TAGLIB_SOVERSION_AGE}")
 math(EXPR TAGLIB_SOVERSION_MINOR "${TAGLIB_SOVERSION_AGE}")
@@ -108,7 +115,7 @@ if(WITH_ZLIB)
       set(HAVE_ZLIB 0)
     endif()
   endif()
-  
+
   if(NOT HAVE_ZLIB AND ZLIB_SOURCE)
     set(HAVE_ZLIB 1)
     set(HAVE_ZLIB_SOURCE 1)
@@ -162,7 +169,6 @@ if(BUILD_EXAMPLES)
 endif()
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.cmake" "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile")
-file(COPY doc/taglib.png DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/doc/html)
 add_custom_target(docs doxygen)
 
 # uninstall target

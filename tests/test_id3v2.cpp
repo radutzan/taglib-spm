@@ -112,6 +112,8 @@ class TestID3v2 : public CppUnit::TestFixture
   CPPUNIT_TEST(testRenderPodcastFrame);
   CPPUNIT_TEST(testParsePrivateFrame);
   CPPUNIT_TEST(testRenderPrivateFrame);
+  CPPUNIT_TEST(testParseUserTextIdentificationFrame);
+  CPPUNIT_TEST(testRenderUserTextIdentificationFrame);
   CPPUNIT_TEST(testSaveUTF16Comment);
   CPPUNIT_TEST(testUpdateGenre23_1);
   CPPUNIT_TEST(testUpdateGenre23_2);
@@ -199,7 +201,14 @@ public:
     sl.append("Foo");
     sl.append("Bar");
     f.setText(sl);
-    CPPUNIT_ASSERT_EQUAL((unsigned int)(4+4+2+1+6+2+6), f.render().size());
+    ByteVector data = f.render();
+    CPPUNIT_ASSERT_EQUAL((unsigned int)(4+4+2+1+6+2+6), data.size());
+    ByteVector noBomBeData("TPE1\x00\x00\x00\x0f\x00\x00\x02"
+                           "\0F\0o\0o\0\0"
+                           "\0B\0a\0r", 25);
+    CPPUNIT_ASSERT_EQUAL(noBomBeData, data);
+    f.setData(data);
+    CPPUNIT_ASSERT_EQUAL(String("Foo Bar"), f.toString());
   }
 
   void testUTF16Delimiter()
@@ -209,7 +218,32 @@ public:
     sl.append("Foo");
     sl.append("Bar");
     f.setText(sl);
-    CPPUNIT_ASSERT_EQUAL((unsigned int)(4+4+2+1+8+2+8), f.render().size());
+    ByteVector data = f.render();
+    CPPUNIT_ASSERT_EQUAL((unsigned int)(4+4+2+1+8+2+8), data.size());
+    ByteVector multiBomLeData("TPE1\x00\x00\x00\x13\x00\x00\x01\xff\xfe"
+                              "F\0o\0o\0\0\0" "\xff\xfe"
+                              "B\0a\0r\0", 29);
+    CPPUNIT_ASSERT_EQUAL(multiBomLeData, data);
+    f.setData(data);
+    CPPUNIT_ASSERT_EQUAL(String("Foo Bar"), f.toString());
+
+    ByteVector multiBomBeData("TPE1\x00\x00\x00\x13\x00\x00\x01\xfe\xff"
+                              "\0F\0o\0o\0\0" "\xfe\xff"
+                              "\0B\0a\0r", 29);
+    f.setData(multiBomBeData);
+    CPPUNIT_ASSERT_EQUAL(String("Foo Bar"), f.toString());
+
+    ByteVector singleBomLeData("TPE1\x00\x00\x00\x13\x00\x00\x01\xff\xfe"
+                               "F\0o\0o\0\0\0"
+                               "B\0a\0r\0", 27);
+    f.setData(singleBomLeData);
+    CPPUNIT_ASSERT_EQUAL(String("Foo Bar"), f.toString());
+
+    ByteVector singleBomBeData("TPE1\x00\x00\x00\x13\x00\x00\x01\xfe\xff"
+                               "\0F\0o\0o\0\0"
+                               "\0B\0a\0r", 27);
+    f.setData(singleBomBeData);
+    CPPUNIT_ASSERT_EQUAL(String("Foo Bar"), f.toString());
   }
 
   void testBrokenFrame1()
@@ -806,6 +840,51 @@ public:
                  "\x00\x00"
                  "WM/Provider\x00"
                  "TL", 24),
+      f.render());
+  }
+
+  void testParseUserTextIdentificationFrame()
+  {
+    ID3v2::UserTextIdentificationFrame frameWithoutDescription(
+      ByteVector("TXXX"
+                 "\x00\x00\x00\x06"
+                 "\x00\x00\x00"
+                 "\x00"
+                 "Text", 16));
+    CPPUNIT_ASSERT_EQUAL(String(""), frameWithoutDescription.description());
+    CPPUNIT_ASSERT_EQUAL(String("Text"), frameWithoutDescription.fieldList()[1]);
+
+    ID3v2::UserTextIdentificationFrame frameWithDescription(
+      ByteVector("TXXX"
+                 "\x00\x00\x00\x11"
+                 "\x00\x00\x00"
+                 "Description\x00"
+                 "Text", 27));
+    CPPUNIT_ASSERT_EQUAL(String("Description"), frameWithDescription.description());
+    CPPUNIT_ASSERT_EQUAL(String("Text"), frameWithDescription.fieldList()[1]);
+  }
+
+  void testRenderUserTextIdentificationFrame()
+  {
+    ID3v2::UserTextIdentificationFrame f;
+    f.setDescription("");
+    f.setText("Text");
+    CPPUNIT_ASSERT_EQUAL(
+      ByteVector("TXXX"
+                 "\x00\x00\x00\x06"
+                 "\x00\x00\x00"
+                 "\x00"
+                 "Text", 16),
+      f.render());
+
+    f.setDescription("Description");
+    f.setText("Text");
+    CPPUNIT_ASSERT_EQUAL(
+      ByteVector("TXXX"
+                 "\x00\x00\x00\x11"
+                 "\x00\x00\x00"
+                 "Description\x00"
+                 "Text", 27),
       f.render());
   }
 
